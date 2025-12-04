@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAS Event Vote - Admin Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="bg-gray-50">
+    <!-- Password Modal -->
+    <div id="password-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-8 w-96 shadow-2xl">
+            <h2 class="text-2xl font-bold text-gray-800 mb-2">Admin Access</h2>
+            <p class="text-gray-600 mb-6">Enter the admin password to continue</p>
+            <input 
+                type="password" 
+                id="admin-password-input" 
+                placeholder="Enter password" 
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"
+                autocomplete="off"
+            >
+            <button 
+                id="admin-login-btn" 
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 rounded-lg transition-colors"
+            >
+                Enter
+            </button>
+            <p id="password-error" class="text-red-500 text-sm mt-3 hidden"></p>
+        </div>
+    </div>
+
+    <!-- Main Admin Dashboard (Hidden until password correct) -->
+    <div id="admin-container" class="hidden min-h-screen flex">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-gradient-to-b from-blue-600 to-blue-800 text-white">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold">TAS Vote</h1>
+                <p class="text-blue-200 text-sm mt-2">Event Voting System</p>
+            </div>
+            <nav class="mt-8">
+                <a href="#" data-tab="event-settings" class="tab-link flex items-center px-6 py-3 bg-blue-700 border-l-4 border-white">
+                    <span class="mr-3">⚙️</span>
+                    <span>Event Settings</span>
+                </a>
+                <a href="#" data-tab="candidates" class="tab-link flex items-center px-6 py-3 hover:bg-blue-700 border-l-4 border-transparent">
+                    <span class="mr-3">👥</span>
+                    <span>Manage Candidates</span>
+                </a>
+                <a href="#" data-tab="control" class="tab-link flex items-center px-6 py-3 hover:bg-blue-700 border-l-4 border-transparent">
+                    <span class="mr-3">🎮</span>
+                    <span>Control & Monitor</span>
+                </a>
+                <a href="#" data-tab="results" class="tab-link flex items-center px-6 py-3 hover:bg-blue-700 border-l-4 border-transparent">
+                    <span class="mr-3">📊</span>
+                    <span>Live Results</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1">
+            <!-- Top Bar -->
+            <div class="bg-white border-b border-gray-200 px-8 py-4 flex justify-between items-center">
+                <div>
+                    <h2 class="text-2xl font-bold text-gray-800" id="page-title">Event Settings</h2>
+                </div>
+                <div id="status-badge" class="px-4 py-2 rounded-full text-white bg-yellow-500 font-semibold">
+                    Setup
+                </div>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="p-8">
+                <!-- Event Settings Tab -->
+                <div id="event-settings" class="tab-content">
+                    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                        <h3 class="text-xl font-bold mb-6 text-gray-800">Event Configuration</h3>
+                        <form id="event-form" class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Event Name</label>
+                                    <input type="text" id="event-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Enter event name">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Max Participants</label>
+                                    <input type="number" id="event-max-participants" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="100" min="1">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                                <textarea id="event-description" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" rows="3" placeholder="Event description"></textarea>
+                            </div>
+                            <div class="flex gap-4">
+                                <button type="button" id="save-event-btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
+                                    💾 Save Settings
+                                </button>
+                                <button type="button" id="start-event-btn" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg transition">
+                                    ▶️ Start Event
+                                </button>
+                                <button type="button" id="end-event-btn" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition">
+                                    ⏹️ End Event
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div id="qr-section" class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-xl font-bold mb-6 text-gray-800">QR Code For Voting</h3>
+                        <div class="flex flex-col items-center gap-4">
+                            <p class="text-gray-600">Scan this QR code to start voting</p>
+                            <div id="qr-code-container" class="bg-gray-100 p-4 rounded-lg">
+                                <div id="qr-code" style="width: 300px; height: 300px; display: flex; align-items: center; justify-content: center; background: white; border: 2px solid #e5e7eb;">
+                                    QR Code will be generated
+                                </div>
+                            </div>
+                            <button type="button" id="download-qr-btn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition">
+                                ⬇️ Download QR Code
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Candidates Tab -->
+                <div id="candidates" class="tab-content hidden">
+                    <div class="bg-white rounded-lg shadow-lg p-6 mb-6">
+                        <h3 class="text-xl font-bold mb-6 text-gray-800">Add New Candidate</h3>
+                        <form id="candidate-form" class="space-y-4">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Candidate Name</label>
+                                    <input type="text" id="candidate-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Enter name">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-gray-700 mb-2">Description (Optional)</label>
+                                    <input type="text" id="candidate-description" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Description or position">
+                                </div>
+                            </div>
+                            <button type="button" id="add-candidate-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
+                                ➕ Add Candidate
+                            </button>
+                        </form>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <h3 class="text-xl font-bold mb-6 text-gray-800">Candidates List</h3>
+                        <div id="candidates-list" class="space-y-2">
+                            <p class="text-gray-500">No candidates added yet</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Control & Monitor Tab -->
+                <div id="control" class="tab-content hidden">
+                    <div class="grid grid-cols-3 gap-6 mb-6">
+                        <div class="bg-white rounded-lg shadow-lg p-6">
+                            <div class="text-sm font-semibold text-gray-600 mb-2">Total Participants</div>
+                            <div class="text-4xl font-bold text-blue-600" id="total-participants">0</div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-lg p-6">
+                            <div class="text-sm font-semibold text-gray-600 mb-2">Voted</div>
+                            <div class="text-4xl font-bold text-green-600" id="total-voted">0</div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-lg p-6">
+                            <div class="text-sm font-semibold text-gray-600 mb-2">Pending</div>
+                            <div class="text-4xl font-bold text-orange-600" id="total-pending">0</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-lg shadow-lg p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-xl font-bold text-gray-800">Registered Participants</h3>
+                            <button type="button" id="delete-participants-btn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition text-sm">
+                                🗑️ Delete All Participants
+                            </button>
+                        </div>
+                        <div id="participants-list" class="space-y-2 max-h-96 overflow-y-auto">
+                            <p class="text-gray-500">No participants registered yet</p>
+                        </div>
+                    </div>
+
+                    <div class="mt-6 flex gap-4">
+                        <button type="button" id="clear-votes-btn" class="flex-1 bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-3 px-4 rounded-lg transition text-lg">
+                            🗳️ Clear Votes Only
+                        </button>
+                        <button type="button" id="clear-all-btn" class="flex-1 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition text-lg">
+                            🔄 Clear All Data
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Results Tab -->
+                <div id="results" class="tab-content hidden">
+                    <div class="grid grid-cols-3 gap-6 mb-6">
+                        <div id="top1-card" class="bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-lg shadow-lg p-6 text-white">
+                            <div class="text-sm font-semibold opacity-80">🥇 1st Place</div>
+                            <div class="text-3xl font-bold mt-2" id="top1-name">-</div>
+                            <div class="text-2xl font-bold mt-1" id="top1-points">0 pts</div>
+                        </div>
+                        <div id="top2-card" class="bg-gradient-to-br from-gray-300 to-gray-500 rounded-lg shadow-lg p-6 text-white">
+                            <div class="text-sm font-semibold opacity-80">🥈 2nd Place</div>
+                            <div class="text-3xl font-bold mt-2" id="top2-name">-</div>
+                            <div class="text-2xl font-bold mt-1" id="top2-points">0 pts</div>
+                        </div>
+                        <div id="top3-card" class="bg-gradient-to-br from-orange-300 to-orange-600 rounded-lg shadow-lg p-6 text-white">
+                            <div class="text-sm font-semibold opacity-80">🥉 3rd Place</div>
+                            <div class="text-3xl font-bold mt-2" id="top3-name">-</div>
+                            <div class="text-2xl font-bold mt-1" id="top3-points">0 pts</div>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-6">
+                        <div class="bg-white rounded-lg shadow-lg p-6">
+                            <h3 class="text-xl font-bold mb-6 text-gray-800">All Candidates Ranking</h3>
+                            <div id="all-candidates-list" class="space-y-2">
+                                <p class="text-gray-500">No results yet</p>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg shadow-lg p-6">
+                            <h3 class="text-xl font-bold mb-6 text-gray-800">Points Chart</h3>
+                            <canvas id="points-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal for candidate edit -->
+    <div id="candidate-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+        <div class="bg-white rounded-lg shadow-xl p-6 w-96">
+            <h3 class="text-xl font-bold mb-4">Edit Candidate</h3>
+            <form id="edit-candidate-form" class="space-y-4">
+                <input type="hidden" id="edit-candidate-id">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Name</label>
+                    <input type="text" id="edit-candidate-name" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Description</label>
+                    <input type="text" id="edit-candidate-description" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none">
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" id="save-edit-btn" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition">
+                        Save
+                    </button>
+                    <button type="button" id="close-modal-btn" class="flex-1 bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg transition">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    </div> <!-- End of admin-container -->
+
+    <script src="../js/admin.js"></script>
+</body>
+</html>

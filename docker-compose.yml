@@ -1,0 +1,49 @@
+version: '3.8'
+
+services:
+  # PHP Backend API
+  php-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.php
+    container_name: tas-event-vote-api
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./api:/var/www/html/api
+      - ./data:/var/www/html/data
+    environment:
+      - PHP_ENV=development
+    networks:
+      - tas-network
+    command: php -S 0.0.0.0:8000 -t /var/www/html/api
+
+  # Node.js Frontend Server
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.node
+    container_name: tas-event-vote-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./public:/app/public
+      - ./server.js:/app/server.js
+    environment:
+      - NODE_ENV=development
+      - API_URL=http://php-api:8000
+      - API_HOST=php-api
+      - API_PORT=8000
+    depends_on:
+      - php-api
+    networks:
+      - tas-network
+    command: npm start
+
+networks:
+  tas-network:
+    driver: bridge
+
+volumes:
+  data:
+    driver: local
