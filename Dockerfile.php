@@ -8,6 +8,9 @@ RUN apt-get update && apt-get install -y \
     unzip \
     && rm -rf /var/lib/apt/lists/*
 
+# Set timezone to Bangkok (GMT+7)
+RUN echo "date.timezone = Asia/Bangkok" >> /usr/local/etc/php/php.ini
+
 # Set working directory
 WORKDIR /var/www/html
 
