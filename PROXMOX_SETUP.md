@@ -237,14 +237,48 @@ cloudflared tunnel create tas-event-vote
 
 # This creates a tunnel and saves credentials to:
 # ~/.cloudflared/<tunnel-id>.json
-# and token to: ~/.cloudflared/<tunnel-id>.crt
 
 # Note the tunnel ID for the next step
 ```
 
-## Step 8: Configure Tunnel Routes
+## Step 8: Configure Tunnel Credentials for Docker
 
-Create tunnel config file:
+**Option A: Using Docker (RECOMMENDED)**
+
+The Cloudflare Tunnel is already integrated into Docker Compose!
+
+1. Extract credentials from local machine:
+   ```bash
+   # On your local machine (Windows/Mac/Linux)
+   cat ~/.cloudflared/<TUNNEL_ID>.json
+   ```
+
+2. Copy the JSON content to Proxmox VM:
+   ```bash
+   # In project directory on Proxmox
+   nano cloudflare-credentials.json
+   # Paste the JSON content
+   ```
+
+3. Update the config file:
+   ```bash
+   nano cloudflare-config.yml
+   ```
+   Replace:
+   - `TUNNEL_ID_HERE` with your actual tunnel ID
+   - `yourdomain.com` with your domain
+
+4. Update docker-compose.yml (already done, just verify):
+   ```bash
+   # Check cloudflared service is present
+   grep -A 10 "cloudflared:" docker-compose.yml
+   ```
+
+**Option B: Using systemd Service (Legacy)**
+
+Follow the rest of this section if you prefer to run cloudflared on the host.
+
+### Create tunnel config file:
 
 ```bash
 # Create config directory
@@ -276,7 +310,7 @@ cloudflared tunnel validate
 cloudflared tunnel run tas-event-vote
 ```
 
-## Step 9: Create DNS Records
+## Step 9: Configure DNS Records
 
 In Cloudflare Dashboard:
 
@@ -288,23 +322,21 @@ In Cloudflare Dashboard:
    - TTL: Auto
 3. Save
 
-## Step 10: Install Cloudflare Tunnel as Service
+## Step 10: Start Docker Containers (With Cloudflare Tunnel)
 
 ```bash
-# Install as systemd service
-sudo cloudflared service install
+cd /opt/tas-event-vote
 
-# Start the service
-sudo systemctl start cloudflared
+# Start all containers (including cloudflared)
+docker compose up -d
 
-# Enable auto-start on reboot
-sudo systemctl enable cloudflared
+# Check cloudflared is connected
+docker compose logs cloudflared
 
-# Check service status
-sudo systemctl status cloudflared
-
-# View logs
-sudo journalctl -u cloudflared -f
+# You should see:
+# cloudflared | INF Registering tunnel connection
+# cloudflared | INF Connection registered
+# cloudflared | INF Serving Tunnel ID <your-id>
 ```
 
 ## Step 11: Verify Public Access
@@ -313,8 +345,8 @@ sudo journalctl -u cloudflared -f
 # Test from another machine
 curl https://vote.yourdomain.com/health
 
-# Or open in browser: https://vote.yourdomain.com
-# Should show the voting interface
+# Or open in browser
+https://vote.yourdomain.com
 ```
 
 ## Step 12: Enable HTTPS (Optional but Recommended)

@@ -10,3 +10,13 @@ build/
 .idea/
 package-lock.json
 yarn.lock
+
+# Cloudflare Tunnel - Sensitive Credentials
+cloudflare-credentials.json
+.cloudflared/
+
+# SSL Certificates
+ssl/
+*.pem
+*.key
+*.crt

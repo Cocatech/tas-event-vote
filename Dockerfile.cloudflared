@@ -1,0 +1,8 @@
+FROM cloudflare/cloudflared:latest
+
+# Copy the credentials and config file
+COPY cloudflare-credentials.json /root/.cloudflared/
+COPY cloudflare-config.yml /root/.cloudflared/config.yml
+
+# Run cloudflared tunnel command
+CMD ["tunnel", "run"]

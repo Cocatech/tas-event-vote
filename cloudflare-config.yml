@@ -1,0 +1,16 @@
+# Cloudflare Tunnel Configuration
+# Replace TUNNEL_ID with your actual tunnel ID
+
+tunnel: TUNNEL_ID_HERE
+credentials-file: /root/.cloudflared/cloudflare-credentials.json
+
+ingress:
+  # Route voting interface
+  - hostname: vote.yourdomain.com
+    service: http://nginx:80
+  
+  # Default catch-all (optional, for API prefix routing)
+  - service: http://nginx:80
+
+# Enable logging
+logLevel: info
