@@ -84,16 +84,23 @@ elseif ($action === 'candidates' && $method === 'PUT' && $id) {
     $data = json_decode(file_get_contents('php://input'), true);
     $candidates = loadJSON(CANDIDATES_FILE);
     
+    $found = false;
     foreach ($candidates as &$candidate) {
         if ($candidate['id'] === $id) {
             $candidate['name'] = $data['name'] ?? $candidate['name'];
             $candidate['description'] = $data['description'] ?? $candidate['description'];
             $candidate['order'] = $data['order'] ?? $candidate['order'];
-            saveJSON(CANDIDATES_FILE, $candidates);
-            response(200, 'Candidate updated successfully', $candidate);
+            $found = true;
+            break;
         }
     }
-    response(404, 'Candidate not found');
+    
+    if ($found) {
+        saveJSON(CANDIDATES_FILE, $candidates);
+        response(200, 'Candidate updated successfully', $candidate);
+    } else {
+        response(404, 'Candidate not found');
+    }
 }
 
 elseif ($action === 'candidates' && $method === 'DELETE' && $id) {
