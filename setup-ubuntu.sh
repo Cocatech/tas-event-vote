@@ -31,13 +31,27 @@ apt upgrade -y
 echo -e "${GREEN}✓ System updated${NC}"
 echo ""
 
-# Step 2: Install Docker
+# Step 2: Install Docker (Official Docker Repository)
 echo -e "${YELLOW}[2/7] Installing Docker...${NC}"
-apt install -y docker.io curl wget git
 
-# Install docker-compose (both versions for compatibility)
-apt install -y docker-compose
-pip3 install --upgrade docker-compose 2>/dev/null || true
+# Remove old versions
+apt remove -y docker docker-doc docker.io containerd runc 2>/dev/null || true
+
+# Add Docker's official GPG key
+apt install -y ca-certificates curl gnupg lsb-release
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+chmod a+r /etc/apt/keyrings/docker.gpg
+
+# Add Docker repository
+echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+# Update apt and install Docker
+apt update
+apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin curl wget git
 
 echo -e "${GREEN}✓ Docker installed${NC}"
 echo ""
@@ -90,26 +104,18 @@ echo ""
 # Step 7: Start Docker containers
 echo -e "${YELLOW}[7/7] Starting Docker containers...${NC}"
 
-# Detect which docker-compose command to use
-COMPOSE_CMD=""
+# Use native docker compose (installed from docker-compose-plugin)
+COMPOSE_CMD="docker compose"
 
-# Try docker compose first (newer version)
-if docker compose version &> /dev/null 2>&1; then
-    COMPOSE_CMD="docker compose"
-# Fall back to docker-compose (older version)
-elif command -v docker-compose &> /dev/null; then
-    COMPOSE_CMD="docker-compose"
-# Last resort: check if it works via docker
-elif docker compose 2>&1 | grep -q "Usage"; then
-    COMPOSE_CMD="docker compose"
-else
+# Verify docker compose is available
+if ! docker compose version &> /dev/null; then
     echo -e "${RED}Docker Compose not found!${NC}"
     exit 1
 fi
 
 echo -e "${YELLOW}Using: $COMPOSE_CMD${NC}"
 $COMPOSE_CMD down 2>/dev/null || true
-$COMPOSE_CMD up -d
+$COMPOSE_CMD up -d --build
 echo -e "${GREEN}✓ Containers started${NC}"
 echo ""
 
