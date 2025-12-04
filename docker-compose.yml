@@ -3,13 +3,9 @@ version: '3.8'
 services:
   # Cloudflare Tunnel for public access
   cloudflared:
-    build:
-      context: .
-      dockerfile: Dockerfile.cloudflared
+    image: cloudflare/cloudflared:latest
     container_name: tas-event-vote-cloudflared
-    volumes:
-      - ./cloudflare-config.yml:/root/.cloudflared/config.yml:ro
-      - ./cloudflare-credentials.json:/root/.cloudflared/cloudflare-credentials.json:ro
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TOKEN}
     depends_on:
       - nginx
     networks:
@@ -17,6 +13,7 @@ services:
     restart: unless-stopped
     environment:
       - TZ=Asia/Bangkok
+      - CLOUDFLARE_TOKEN=${CLOUDFLARE_TOKEN}
 
   # Nginx Reverse Proxy
   nginx:

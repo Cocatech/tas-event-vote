@@ -1,8 +1,11 @@
 FROM cloudflare/cloudflared:latest
 
-# Copy the credentials and config file
-COPY cloudflare-credentials.json /root/.cloudflared/
-COPY cloudflare-config.yml /root/.cloudflared/config.yml
+# Method 1: Using token (simpler for Docker)
+# Just pass token via environment variable or command args
 
-# Run cloudflared tunnel command
-CMD ["tunnel", "run"]
+# Method 2: Using credentials file (if available)
+# COPY cloudflare-credentials.json /root/.cloudflared/
+# COPY cloudflare-config.yml /root/.cloudflared/config.yml
+
+# Default command - can be overridden
+CMD ["tunnel", "--no-autoupdate", "run"]
