@@ -314,11 +314,14 @@ async function deleteCandidate(candidateId) {
         }
         
         const data = await response.json();
-        if (data.success) {
+        console.log('Delete response:', data);
+        
+        // Check if response has success field OR if status is 200 (which means success)
+        if (data.success || response.status === 200) {
             alert('✅ Candidate deleted successfully!');
             loadCandidates();
         } else {
-            alert(`Error: ${data.message}`);
+            alert(`Error: ${data.message || 'Unknown error'}`);
         }
     } catch (error) {
         console.error('Error deleting candidate:', error);
@@ -349,12 +352,15 @@ document.getElementById('save-edit-btn').addEventListener('click', async () => {
         }
         
         const data = await response.json();
-        if (data.success) {
+        console.log('Edit response:', data);
+        
+        // Check if response has success field OR if status is 200 (which means success)
+        if (data.success || response.status === 200) {
             alert('✅ Candidate updated successfully!');
             document.getElementById('candidate-modal').classList.add('hidden');
             loadCandidates();
         } else {
-            alert(`Error: ${data.message}`);
+            alert(`Error: ${data.message || 'Unknown error'}`);
         }
     } catch (error) {
         console.error('Error updating candidate:', error);
