@@ -117,12 +117,20 @@ function displayFullRankings(allCandidates) {
 function displayStats(allCandidates) {
     document.getElementById('stat-candidates').textContent = allCandidates.length;
     
-    const totalVotes = allCandidates.reduce((sum, c) => sum + c.vote_count, 0);
-    document.getElementById('stat-votes').textContent = totalVotes;
+    // Count unique participants who have voted (from their voted_at field)
+    const response = fetch(`${API_BASE}/get-participants`);
+    response.then(res => res.json()).then(data => {
+        if (data.success) {
+            const participantsWhoVoted = data.data.filter(p => p.voted_at !== null && p.voted_at !== '').length;
+            document.getElementById('stat-votes').textContent = participantsWhoVoted;
+        }
+    }).catch(err => console.error('Error loading participants:', err));
     
     const totalPoints = allCandidates.reduce((sum, c) => sum + c.total_points, 0);
     document.getElementById('stat-points').textContent = totalPoints;
     
+    // Calculate avg points per participant (not per vote)
+    const totalVotes = allCandidates.reduce((sum, c) => sum + c.vote_count, 0);
     const avgPoints = totalVotes > 0 ? (totalPoints / totalVotes).toFixed(1) : '0';
     document.getElementById('stat-avg').textContent = avgPoints;
 
