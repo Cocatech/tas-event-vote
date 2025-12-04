@@ -308,14 +308,23 @@ async function deleteCandidate(candidateId) {
         const response = await fetch(`${API_BASE}/candidates/${candidateId}`, {
             method: 'DELETE'
         });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const data = await response.json();
         if (data.success) {
+            alert('✅ Candidate deleted successfully!');
             loadCandidates();
+        } else {
+            alert(`Error: ${data.message}`);
         }
     } catch (error) {
         console.error('Error deleting candidate:', error);
-        alert('Error deleting candidate');
+        alert('Error deleting candidate: ' + error.message);
     }
+}
 }
 
 document.getElementById('save-edit-btn').addEventListener('click', async () => {
@@ -334,14 +343,22 @@ document.getElementById('save-edit-btn').addEventListener('click', async () => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name, description })
         });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
         const data = await response.json();
         if (data.success) {
+            alert('✅ Candidate updated successfully!');
             document.getElementById('candidate-modal').classList.add('hidden');
             loadCandidates();
+        } else {
+            alert(`Error: ${data.message}`);
         }
     } catch (error) {
         console.error('Error updating candidate:', error);
-        alert('Error updating candidate');
+        alert('Error updating candidate: ' + error.message);
     }
 });
 
