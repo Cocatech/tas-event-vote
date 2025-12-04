@@ -33,7 +33,12 @@ echo ""
 
 # Step 2: Install Docker
 echo -e "${YELLOW}[2/7] Installing Docker...${NC}"
-apt install -y docker.io docker-compose curl wget git
+apt install -y docker.io curl wget git
+
+# Install docker-compose (both versions for compatibility)
+apt install -y docker-compose
+pip3 install --upgrade docker-compose 2>/dev/null || true
+
 echo -e "${GREEN}✓ Docker installed${NC}"
 echo ""
 
@@ -84,8 +89,27 @@ echo ""
 
 # Step 7: Start Docker containers
 echo -e "${YELLOW}[7/7] Starting Docker containers...${NC}"
-docker compose down 2>/dev/null || true
-docker compose up -d
+
+# Detect which docker-compose command to use
+COMPOSE_CMD=""
+
+# Try docker compose first (newer version)
+if docker compose version &> /dev/null 2>&1; then
+    COMPOSE_CMD="docker compose"
+# Fall back to docker-compose (older version)
+elif command -v docker-compose &> /dev/null; then
+    COMPOSE_CMD="docker-compose"
+# Last resort: check if it works via docker
+elif docker compose 2>&1 | grep -q "Usage"; then
+    COMPOSE_CMD="docker compose"
+else
+    echo -e "${RED}Docker Compose not found!${NC}"
+    exit 1
+fi
+
+echo -e "${YELLOW}Using: $COMPOSE_CMD${NC}"
+$COMPOSE_CMD down 2>/dev/null || true
+$COMPOSE_CMD up -d
 echo -e "${GREEN}✓ Containers started${NC}"
 echo ""
 
@@ -99,7 +123,7 @@ sleep 5
 
 # Check container status
 echo -e "${YELLOW}Container Status:${NC}"
-docker compose ps
+$COMPOSE_CMD ps
 echo ""
 
 # Check health endpoint
@@ -118,7 +142,7 @@ echo -e "${GREEN}========================================${NC}"
 echo ""
 echo -e "${BLUE}Next Steps:${NC}"
 echo "1. Verify containers are running:"
-echo "   ${YELLOW}docker compose ps${NC}"
+echo "   ${YELLOW}$COMPOSE_CMD ps${NC}"
 echo ""
 echo "2. Test the system:"
 echo "   ${YELLOW}curl http://localhost/health${NC}"
@@ -133,9 +157,9 @@ echo "- You may need to log out/in to activate docker permissions"
 echo "- Cloudflare Tunnel will be active for public access"
 echo ""
 echo -e "${BLUE}Useful commands:${NC}"
-echo "   docker compose logs -f              # View logs"
-echo "   docker compose restart              # Restart all services"
-echo "   docker compose down                 # Stop all services"
-echo "   docker compose up -d                # Start services"
+echo "   $COMPOSE_CMD logs -f              # View logs"
+echo "   $COMPOSE_CMD restart              # Restart all services"
+echo "   $COMPOSE_CMD down                 # Stop all services"
+echo "   $COMPOSE_CMD up -d                # Start services"
 echo ""
 echo -e "${GREEN}Happy voting! 🎉${NC}"
