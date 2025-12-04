@@ -32,47 +32,154 @@ A comprehensive online voting system for events with real-time results, QR code 
 
 ---
 
-## 📦 Installation & Setup
+## 🐳 Docker Installation & Deployment
+
+### Quick Start (Recommended)
+
+**This project is fully containerized with Docker.** All services run in isolated containers with automatic setup.
+
+#### Option 1: Proxmox Deployment (Production)
+
+1. **Create Ubuntu 22.04 VM on Proxmox**
+   - Specs: 2GB RAM, 2 CPU cores, 20GB storage
+   - Use live-server ISO
+
+2. **Run Automated Setup Script**
+   ```bash
+   sudo bash <(curl -fsSL https://raw.githubusercontent.com/Cocatech/tas-event-vote/main/setup-ubuntu.sh)
+   ```
+   - Enter Cloudflare Tunnel token when prompted
+   - Script installs Docker, clones repo, starts containers
+   - System will be live at: **https://vote.tas-c.com**
+
+#### Option 2: Local Docker Deployment
+
+**Prerequisites:**
+- Docker Desktop (Windows/Mac) or Docker Engine (Linux)
+- Docker Compose
+
+**Installation:**
+
+1. **Clone Repository**
+   ```bash
+   git clone https://github.com/Cocatech/tas-event-vote.git
+   cd tas-event-vote
+   ```
+
+2. **Create Environment File**
+   ```bash
+   # Create .env file with your Cloudflare token
+   echo "CLOUDFLARE_TOKEN=your-token-here" > .env
+   ```
+   
+   Or edit `.env` directly:
+   ```
+   CLOUDFLARE_TOKEN=eyJhIjoiODgyZDBi...
+   ```
+
+3. **Start Services**
+   ```bash
+   docker compose up -d
+   ```
+
+4. **Verify Installation**
+   ```bash
+   # Check all containers are running
+   docker compose ps
+   
+   # Test health endpoint
+   curl http://localhost/health
+   ```
+
+5. **Access System**
+   - **Home**: http://localhost
+   - **Admin Dashboard**: http://localhost/admin (password: tas2024)
+   - **Voting Page**: http://localhost/vote
+   - **Results Page**: http://localhost/results.html
+   - **Public Access**: https://vote.tas-c.com (if Cloudflare connected)
+
+### Docker Services Architecture
+
+```
+┌─────────────────────────────────────────────┐
+│        Cloudflare Tunnel (Public)           │
+│      vote.tas-c.com ←→ HTTPS               │
+└────────────────┬────────────────────────────┘
+                 │
+        ┌────────▼──────────┐
+        │   Nginx (Port 80) │
+        │  Reverse Proxy    │
+        └────────┬──────────┘
+                 │
+    ┌────────────┼────────────┐
+    │            │            │
+┌───▼────┐  ┌───▼────┐  ┌──▼─────┐
+│Frontend │  │ PHP API│  │ (Data) │
+│Node.js  │  │Port    │  │ Volume │
+│Port 3000│  │8000    │  │        │
+└─────────┘  └────────┘  └────────┘
+```
+
+### Useful Docker Commands
+
+```bash
+# View all container logs
+docker compose logs -f
+
+# Restart all services
+docker compose restart
+
+# Stop all services
+docker compose down
+
+# Start services
+docker compose up -d
+
+# View container status
+docker compose ps
+
+# Access container shell
+docker exec -it tas-event-vote-api bash
+
+# Clear all data (WARNING!)
+docker compose down -v
+```
+
+### Environment Variables
+
+The `.env` file contains:
+- `CLOUDFLARE_TOKEN`: Your Cloudflare Tunnel authentication token
+
+All containers automatically configured for:
+- **Timezone**: Bangkok (GMT+7)
+- **Cache**: Disabled (no-cache headers)
+- **Network**: Internal Docker network
+
+---
+
+## 📦 Legacy Installation (Local Development)
+
+For local development without Docker:
 
 ### Prerequisites:
-- Node.js 12+ and npm
-- PHP 7.4+ (Built-in PHP server)
-- Git (optional)
+- Node.js 18+
+- PHP 8.1+
+- Git
 
-### Step 1: Install Node Dependencies
+### Setup:
 
 ```bash
-cd c:\Project\TAS-Event-Vote
+# 1. Install Node dependencies
 npm install
-```
 
-### Step 2: Start PHP API Server (Terminal 1)
-
-```bash
-# Windows PowerShell
-cd c:\Project\TAS-Event-Vote
+# 2. Start PHP API (Terminal 1)
 php -S localhost:8000 -t api/
-```
 
-Or use Windows command prompt:
-```bash
-cd c:\Project\TAS-Event-Vote && php -S localhost:8000 -t api/
-```
-
-### Step 3: Start Node.js Server (Terminal 2)
-
-```bash
-cd c:\Project\TAS-Event-Vote
+# 3. Start Node.js server (Terminal 2)
 npm start
+
+# 4. Access at http://localhost:3000
 ```
-
-### Step 4: Access the System
-
-Open your browser and navigate to:
-- **Home**: http://localhost:3000
-- **Admin Dashboard**: http://localhost:3000/admin
-- **Voting Page**: http://localhost:3000/vote
-- **Results Page**: http://localhost:3000/results
 
 ---
 
